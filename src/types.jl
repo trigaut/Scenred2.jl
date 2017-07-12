@@ -89,9 +89,61 @@ function Scenred2Tree(f::Scenred2Fan, prms::Scenred2Prms)
     n_vars = raw_tree[find(x->x=="RANDOM",raw_tree[:,1])[1],2]
 
     ind_first_node = find(x->x==1,raw_tree[:,1])[1]
-    data = raw_tree[ind_first_node:ind_first_node+n_nodes-1, 2:end]
+    data = raw_tree[ind_first_node:ind_first_node+n_nodes-1, 1:n_vars+2]
     println(data)
 
     Scenred2Tree(n_nodes, n_vars, data)
 
+end
+
+function LightGraphs.Graph(tree::Scenred2Tree)
+    n_nodes = tree.n_nodes
+    adjlist = [Array{Int,1}() for _ in 1:n_nodes]
+    edgelabels = []
+    nodelabels = [tree.nodes[1].data]
+    for (i,n) in enumerate(tree.nodes[2:end])
+        push!(adjlist[i+1], n.predecessor)
+        push!(adjlist[n.predecessor], i+1)
+        push!(edgelabels, n.conditional_probability)
+        push!(nodelabels, n.data)
+    end
+    Graph(length(edgelabels), adjlist), edgelabels, nodelabels
+end
+
+function LightGraphs.DiGraph(tree::Scenred2Tree)
+    n_nodes = tree.n_nodes
+    fadjlist = [Array{Int,1}() for _ in 1:n_nodes]
+    badjlist = [Array{Int,1}() for _ in 1:n_nodes]
+    edgelabels = Dict()
+    nodelabels = [tree.nodes[1].data]
+    for (i,n) in enumerate(tree.nodes[2:end])
+        #push!(badjlist[i+1], n.predecessor)
+        push!(fadjlist[n.predecessor], i+1)
+        edgelabels[(n.predecessor, i+1)] = n.conditional_probability
+        push!(nodelabels, n.data)
+    end
+    DiGraph(length(edgelabels), fadjlist, badjlist), edgelabels, nodelabels
+end
+
+function LightGraphs.DiGraph(fan::Scenred2Fan)
+    nT = fan.TIME
+    nS = fan.SCEN
+    nR = fan.RANDOM
+    n_nodes = nT * nS + 1  
+    fadjlist = [Array{Int,1}() for _ in 1:n_nodes]
+    badjlist = [Array{Int,1}() for _ in 1:n_nodes]
+    edgelabels = Dict()
+    nodelabels = [ fill(0.,nR) for _ in 1:n_nodes ]
+    for (is,s) in enumerate(fan.scenarios)
+        edgelabels[(1,2+(is-1)*nT)] = s.probability
+        push!(fadjlist[1], 2+(is-1)*nT)
+        for t in 1:nT-1
+            nodelabels[1+(is-1)*nT+t] = s.data[t,:]
+            push!(fadjlist[1+(is-1)*nT+t], 1+(is-1)*nT+t+1)
+            #push!(badjlist[1+(is-1)*nT+t+1], 1+(is-1)*nT+t)
+        end
+        nodelabels[1+(is-1)*nT+nT] = s.data[nT,:]
+    end
+
+    DiGraph(length(edgelabels), fadjlist, badjlist), edgelabels, nodelabels
 end

@@ -1,15 +1,18 @@
-using Scenred2
+using Scenred2, LightGraphs
 
 T = 3
-S = 2
-R = 4
+S = 3
+R = 2
 
-s1 = Scenred2Scenario(0.6, round.(rand(T,R),3))
+probas = round.(rand(S),2)
+probas = probas./sum(probas)
 
-s2 = Scenred2Scenario(0.4, round.(rand(T,R),3))
+scenarios = [Scenred2Scenario(p, round.(rand(T,R),3)) for p in probas ]
 
-fan = Scenred2Fan(T,2,R,[s1, s2])
+fan = Scenred2Fan(T,2,R,scenarios)
 
-prms = Scenred2Prms()
+prms = Scenred2Prms(red_percentage = 0.8)
 
-Scenred2Tree(fan, prms)
+tree = Scenred2Tree(fan, prms)
+
+gg = Graph(tree)
