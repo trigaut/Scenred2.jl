@@ -12,7 +12,4 @@ fan = Scenred2Fan(T,2,R,[s1, s2])
 
 prms = Scenred2Prms()
 
-writedlm(fan)
-writedlm(prms)
-
 Scenred2Tree(fan, prms)

@@ -55,7 +55,7 @@ end
 function Base.writedlm(prms::Scenred2Prms) 
     d = Dict()
     obj_to_dict!(d, prms)
-    writedlm("/tmp/scenred2Opt.opt", d)
+    writedlm("$(Pkg.Dir.path())/Scenred2/tmp/scenred2Opt.opt", d)
 end
 
 function Base.writedlm(fan::Scenred2Fan)
@@ -67,7 +67,7 @@ function Base.writedlm(fan::Scenred2Fan)
         d["DATA"] = join([d["DATA"], stringify(s)])
     end
     d["END"] = ""
-    writedlm("/tmp/scenred2Fan.dat", d, quotes = false)
+    writedlm("$(Pkg.Dir.path())/Scenred2/tmp/scenred2Fan.dat", d, quotes = false)
 end
 
 Scenred2Node(data::Vector{Any}) = Scenred2Node(floor(Int,data[1]), data[2], data[3:end])
@@ -83,7 +83,7 @@ function Scenred2Tree(f::Scenred2Fan, prms::Scenred2Prms)
 
     run(`scenred2 $(Pkg.Dir.path())/Scenred2/build/scenred2Cmd.cmd -nogams`)
 
-    raw_tree = readdlm("/tmp/scenred2Out.dat")
+    raw_tree = readdlm("$(Pkg.Dir.path())/Scenred2/tmp/scenred2Out.dat")
 
     n_nodes = raw_tree[find(x->x=="NODES",raw_tree[:,1])[1],2]
     n_vars = raw_tree[find(x->x=="RANDOM",raw_tree[:,1])[1],2]
