@@ -44,20 +44,33 @@ function obj_to_dict!(d::Dict, obj; first_field::Int=1, last_field::Int=0)
     end
 end
 
+
+function stringify(scenario::Scenred2Scenario)
+    str = string(scenario.probability)"\n"
+    for t in 1:size(scenario.data)[1]
+        str = join(str,join(scenario.data[t,:], " ")"\n")
+    end
+    str
+end
+
 function Base.writedlm(prms::Scenred2Prms) 
     d = Dict()
     obj_to_dict!(d, prms)
     writedlm("scenred2Opt.opt", d)
 end
 
-function Base.writedlm(prms::Scenred2Fan)
+function Base.writedlm(fan::Scenred2Fan)
     d = Dict("TYPE" => "FAN")
     obj_tp_dict!(d, last_field=1)
     d["DATA"] = ""
-    
+    scenarios = fan.scenarios
+    for s in fan.scenarios
+        d["DATA"] = join(d["DATA"], stringify(s))
+    end
     d["END"] = ""
+    writedlm("scenred2Fan.dat", d)
 end
 
 function Scenred2Tree(f::Scenred2Fan, prms::Scenred2Prms)
-
+    1
 end
