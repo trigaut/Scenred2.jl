@@ -55,7 +55,7 @@ end
 function Base.writedlm(prms::Scenred2Prms) 
     d = Dict()
     obj_to_dict!(d, prms)
-    writedlm("$(Pkg.Dir.path())/Scenred2/tmp/scenred2Opt.opt", d)
+    writedlm("$(scenred2tmpdir)/scenred2Opt.opt", d)
 end
 
 function Base.writedlm(fan::Scenred2Fan)
@@ -67,7 +67,7 @@ function Base.writedlm(fan::Scenred2Fan)
         d["DATA"] = join([d["DATA"], stringify(s)])
     end
     d["END"] = ""
-    writedlm("$(Pkg.Dir.path())/Scenred2/tmp/scenred2Fan.dat", d, quotes = false)
+    writedlm("$(scenred2tmpdir)/scenred2Fan.dat", d, quotes = false)
 end
 
 Scenred2Node(data::Vector{Any}) = Scenred2Node(floor(Int,data[1]), data[2], data[3:end])
@@ -81,33 +81,18 @@ function Scenred2Tree(f::Scenred2Fan, prms::Scenred2Prms)
     writedlm(f)
     writedlm(prms)
 
-    run(`scenred2 $(Pkg.Dir.path())/Scenred2/build/scenred2Cmd.cmd -nogams`)
+    run(`scenred2 $(scenred2depsdir)/scenred2Cmd.cmd -nogams`)
 
-    raw_tree = readdlm("$(Pkg.Dir.path())/Scenred2/tmp/scenred2Out.dat")
+    raw_tree = readdlm("$(scenred2tmpdir)/scenred2Out.dat")
 
     n_nodes = raw_tree[find(x->x=="NODES",raw_tree[:,1])[1],2]
     n_vars = raw_tree[find(x->x=="RANDOM",raw_tree[:,1])[1],2]
 
     ind_first_node = find(x->x==1,raw_tree[:,1])[1]
     data = raw_tree[ind_first_node:ind_first_node+n_nodes-1, 1:n_vars+2]
-    println(data)
 
     Scenred2Tree(n_nodes, n_vars, data)
 
-end
-
-function LightGraphs.Graph(tree::Scenred2Tree)
-    n_nodes = tree.n_nodes
-    adjlist = [Array{Int,1}() for _ in 1:n_nodes]
-    edgelabels = []
-    nodelabels = [tree.nodes[1].data]
-    for (i,n) in enumerate(tree.nodes[2:end])
-        push!(adjlist[i+1], n.predecessor)
-        push!(adjlist[n.predecessor], i+1)
-        push!(edgelabels, n.conditional_probability)
-        push!(nodelabels, n.data)
-    end
-    Graph(length(edgelabels), adjlist), edgelabels, nodelabels
 end
 
 function LightGraphs.DiGraph(tree::Scenred2Tree)
@@ -117,7 +102,6 @@ function LightGraphs.DiGraph(tree::Scenred2Tree)
     edgelabels = Dict()
     nodelabels = [tree.nodes[1].data]
     for (i,n) in enumerate(tree.nodes[2:end])
-        #push!(badjlist[i+1], n.predecessor)
         push!(fadjlist[n.predecessor], i+1)
         edgelabels[(n.predecessor, i+1)] = n.conditional_probability
         push!(nodelabels, n.data)
@@ -140,7 +124,6 @@ function LightGraphs.DiGraph(fan::Scenred2Fan)
         for t in 1:nT-1
             nodelabels[1+(is-1)*nT+t] = s.data[t,:]
             push!(fadjlist[1+(is-1)*nT+t], 1+(is-1)*nT+t+1)
-            #push!(badjlist[1+(is-1)*nT+t+1], 1+(is-1)*nT+t)
         end
         nodelabels[1+(is-1)*nT+nT] = s.data[nT,:]
     end
