@@ -21,8 +21,11 @@ end
 
 tmpdir = "$(Pkg.Dir.path())/Scenred2/tmp" 
 
-d = Dict()
+if ~isdir(tmpdir)
+    mkdir(tmpdir) 
+end
 
+d = Dict()
 d["log_file"] = "$(tmpdir)/scenred2Log.log"
 d["tree_con"] = "$(tmpdir)/scenred2Opt.opt"
 d["read_scen"] = "$(tmpdir)/scenred2Fan.dat"

@@ -52,13 +52,15 @@ function stringify(scenario::Scenred2Scenario)
     str
 end
 
-function Base.writedlm(prms::Scenred2Prms) 
+function write_prms(prms::Scenred2Prms) 
     d = Dict()
     obj_to_dict!(d, prms)
-    writedlm("$(scenred2tmpdir)/scenred2Opt.opt", d)
+    optfile = "$(scenred2tmpdir)/scenred2Opt.opt" 
+    writedlm(optfile, d)
+    optfile
 end
 
-function Base.writedlm(fan::Scenred2Fan)
+function write_fan(fan::Scenred2Fan)
     d = Dict()
     d["TYPE FAN"] = "\nTIME $(fan.TIME)\nSCEN $(fan.SCEN)\nRANDOM $(fan.RANDOM)"
     scenarios = fan.scenarios
@@ -67,7 +69,9 @@ function Base.writedlm(fan::Scenred2Fan)
         d["DATA"] = join([d["DATA"], stringify(s)])
     end
     d["END"] = ""
-    writedlm("$(scenred2tmpdir)/scenred2Fan.dat", d, quotes = false)
+    datfile = "$(scenred2tmpdir)/scenred2Fan.dat"
+    writedlm(datfile, d, quotes = false)
+    datfile
 end
 
 Scenred2Node(data::Vector{Any}) = Scenred2Node(floor(Int,data[1]), data[2], data[3:end])
@@ -78,12 +82,17 @@ end
 
 function Scenred2Tree(f::Scenred2Fan, prms::Scenred2Prms)
     
-    writedlm(f)
-    writedlm(prms)
+    fanfile = write_fan(f)
+    prmsfile = write_prms(prms)
+    outfile = "$(scenred2tmpdir)/scenred2Out.dat"
 
     run(`scenred2 $(scenred2depsdir)/scenred2Cmd.cmd -nogams`)
 
-    raw_tree = readdlm("$(scenred2tmpdir)/scenred2Out.dat")
+    raw_tree = readdlm(outfile)
+
+    rm(fanfile)
+    rm(prmsfile)
+    rm(outfile)
 
     n_nodes = raw_tree[find(x->x=="NODES",raw_tree[:,1])[1],2]
     n_vars = raw_tree[find(x->x=="RANDOM",raw_tree[:,1])[1],2]
