@@ -1,7 +1,7 @@
 # Julia wrapper for SCENRED2
 
 Scenred2.jl provides a julia interface to use [GAMS's SCENRED2](https://www.gams.com/latest/docs/tools/scenred2/index.html) scenario trees construction and reduction tool.
-SCENRED2 is developed by [Dr. Holger Heitsch](https://www.wias-berlin.de/people/heitsch/).
+SCENRED2 is developed by [Dr. Holger Heitsch](https://www.wias-berlin.de/people/heitsch/), this wrapper is unofficial.
 This package is available free of charge and in no way replaces or alters any functionality of GAMS's SCENRED2 product.
 
 ## Setting up SCENRED2 on Linux

@@ -18,9 +18,9 @@ type Scenred2Scenario
 end
 
 type Scenred2Fan
-    TIME::Int
-    SCEN::Int
-    RANDOM::Int
+    timesteps::Int #Number of time steps
+    n_scen::Int #Number of scenarios
+    n_random_variables::Int #Number of random variables
     scenarios::Vector{Scenred2Scenario}
 end
 
@@ -62,7 +62,7 @@ end
 
 function write_fan(fan::Scenred2Fan)
     d = Dict()
-    d["TYPE FAN"] = "\nTIME $(fan.TIME)\nSCEN $(fan.SCEN)\nRANDOM $(fan.RANDOM)"
+    d["TYPE FAN"] = "\nTIME $(fan.timesteps)\nSCEN $(fan.n_scen)\nRANDOM $(fan.n_random_variables)"
     scenarios = fan.scenarios
     d["DATA"] = "\n"
     for s in fan.scenarios
@@ -119,9 +119,9 @@ function LightGraphs.DiGraph(tree::Scenred2Tree)
 end
 
 function LightGraphs.DiGraph(fan::Scenred2Fan)
-    nT = fan.TIME
-    nS = fan.SCEN
-    nR = fan.RANDOM
+    nT = fan.timesteps
+    nS = fan.n_scen
+    nR = fan.n_random_variables
     n_nodes = nT * nS + 1  
     fadjlist = [Array{Int,1}() for _ in 1:n_nodes]
     badjlist = [Array{Int,1}() for _ in 1:n_nodes]
