@@ -15,3 +15,10 @@ This package is available free of charge and in no way replaces or alters any fu
 julia> Pkg.clone("https://github.com/trigaut/Scenred2.jl.git")
 julia> Pkg.build("Scenred2")
 ```
+
+## Construction and reduction parameters
+
+A list of supported construction and reduction parameters is available in [SCENRED2 documentation](https://www.gams.com/latest/docs/tools/scenred2/index.html).
+
+## Tutorial
+Take a look at the notebook in the examples folder for a quick tutorial.
