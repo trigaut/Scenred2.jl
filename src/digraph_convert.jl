@@ -6,7 +6,7 @@ function LightGraphs.DiGraph(tree::Scenred2Tree)
     nodelabels = [tree.nodes[1].data]
     for (i,n) in enumerate(tree.nodes[2:end])
         push!(fadjlist[n.predecessor], i+1)
-        edgelabels[(n.predecessor, i+1)] = n.conditional_probability
+        edgelabels[(n.predecessor, i+1)] = n.probability
         push!(nodelabels, n.data)
     end
     DiGraph(length(edgelabels), fadjlist, badjlist), edgelabels, nodelabels
