@@ -25,53 +25,32 @@ type Scenred2Fan
 end
 
 type Scenred2Prms
+    #construction parameters
     construction_method::Int
+    first_branch::Int
+    eps_growth::Int
+    eps_evolution::Float64
+
+    #reduction parameters
+    metric_type::Int
+    p_norm::Int
+    red_num_leaves::Int
+
+    #common parameters
+    red_percentage::Float64
     reduction_method::Int
     order::Int
     scaling::Int
-    red_percentage::Float64
 end
 
-function Scenred2Prms(; construction_method::Int = 2, reduction_method = 1, 
-                        order = 1, scaling = 0, red_percentage = 0.1)
-    Scenred2Prms(construction_method, reduction_method, order, scaling, red_percentage)
-end
-
-function obj_to_dict!(d::Dict, obj; first_field::Int=1, last_field::Int=0)
-    for i in fieldnames(obj)[first_field:end-last_field]
-       d[string(i)] = eval(quote string($obj.$i) end)
-    end
-end
-
-
-function stringify(scenario::Scenred2Scenario)
-    str = string(scenario.probability)"\n"
-    for t in 1:size(scenario.data)[1]
-        str = join([str,join(scenario.data[t,:], " ")"\n"])
-    end
-    str
-end
-
-function write_prms(prms::Scenred2Prms) 
-    d = Dict()
-    obj_to_dict!(d, prms)
-    optfile = "$(scenred2tmpdir)/scenred2Opt.opt" 
-    writedlm(optfile, d)
-    optfile
-end
-
-function write_fan(fan::Scenred2Fan)
-    d = Dict()
-    d["TYPE FAN"] = "\nTIME $(fan.timesteps)\nSCEN $(fan.n_scen)\nRANDOM $(fan.n_random_variables)"
-    scenarios = fan.scenarios
-    d["DATA"] = "\n"
-    for s in fan.scenarios
-        d["DATA"] = join([d["DATA"], stringify(s)])
-    end
-    d["END"] = ""
-    datfile = "$(scenred2tmpdir)/scenred2Fan.dat"
-    writedlm(datfile, d, quotes = false)
-    datfile
+function Scenred2Prms(; construction_method = 2, first_branch = -1, 
+                        eps_growth = -1, eps_evolution = -1., 
+                        metric_type = 1, p_norm = -1, red_num_leaves = -1,
+                        red_percentage = 0.1, reduction_method = 1, 
+                        order = 1, scaling = 1)
+    Scenred2Prms(construction_method, first_branch, eps_growth, eps_evolution, 
+                metric_type, p_norm, red_num_leaves, red_percentage, 
+                reduction_method, order, scaling)
 end
 
 Scenred2Node(data::Vector{Any}) = Scenred2Node(floor(Int,data[1]), data[2], data[3:end])
@@ -80,16 +59,19 @@ function Scenred2Tree(n_nodes::Int, n_vars::Int, data::Array{Any,2})
     Scenred2Tree(n_nodes, n_vars, [Scenred2Node(data[i,:]) for i in 1:size(data)[1]])
 end
 
-function Scenred2Tree(f::Scenred2Fan, prms::Scenred2Prms)
-    
+function Scenred2Tree(f::Scenred2Fan, prms::Scenred2Prms ; runtime_limit = -1, 
+                        report_level = -1)
+
+    cmd_file = write_cmd("tree_con", runtime_limit, report_level)
     fanfile = write_fan(f)
     prmsfile = write_prms(prms)
     outfile = "$(scenred2tmpdir)/scenred2Out.dat"
 
-    run(`scenred2 $(scenred2depsdir)/scenred2Cmd.cmd -nogams`)
+    run(`scenred2 $(cmdfile) -nogams`)
 
     raw_tree = readdlm(outfile)
 
+    rm(cmdfile)
     rm(fanfile)
     rm(prmsfile)
     rm(outfile)
@@ -102,40 +84,4 @@ function Scenred2Tree(f::Scenred2Fan, prms::Scenred2Prms)
 
     Scenred2Tree(n_nodes, n_vars, data)
 
-end
-
-function LightGraphs.DiGraph(tree::Scenred2Tree)
-    n_nodes = tree.n_nodes
-    fadjlist = [Array{Int,1}() for _ in 1:n_nodes]
-    badjlist = [Array{Int,1}() for _ in 1:n_nodes]
-    edgelabels = Dict()
-    nodelabels = [tree.nodes[1].data]
-    for (i,n) in enumerate(tree.nodes[2:end])
-        push!(fadjlist[n.predecessor], i+1)
-        edgelabels[(n.predecessor, i+1)] = n.conditional_probability
-        push!(nodelabels, n.data)
-    end
-    DiGraph(length(edgelabels), fadjlist, badjlist), edgelabels, nodelabels
-end
-
-function LightGraphs.DiGraph(fan::Scenred2Fan)
-    nT = fan.timesteps
-    nS = fan.n_scen
-    nR = fan.n_random_variables
-    n_nodes = nT * nS + 1  
-    fadjlist = [Array{Int,1}() for _ in 1:n_nodes]
-    badjlist = [Array{Int,1}() for _ in 1:n_nodes]
-    edgelabels = Dict()
-    nodelabels = [ fill(0.,nR) for _ in 1:n_nodes ]
-    for (is,s) in enumerate(fan.scenarios)
-        edgelabels[(1,2+(is-1)*nT)] = s.probability
-        push!(fadjlist[1], 2+(is-1)*nT)
-        for t in 1:nT-1
-            nodelabels[1+(is-1)*nT+t] = s.data[t,:]
-            push!(fadjlist[1+(is-1)*nT+t], 1+(is-1)*nT+t+1)
-        end
-        nodelabels[1+(is-1)*nT+nT] = s.data[nT,:]
-    end
-
-    DiGraph(length(edgelabels), fadjlist, badjlist), edgelabels, nodelabels
 end
