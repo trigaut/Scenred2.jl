@@ -1,0 +1,7 @@
+name = "Scenred2"
+uuid = "9c610728-0b8c-11e9-3e07-7df7cdb9f81a"
+authors = ["trigaut <tristan.rigaut@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
