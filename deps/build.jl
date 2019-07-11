@@ -1,9 +1,13 @@
-depsfile = joinpath(dirname(@__FILE__),"deps.jl")
+using Pkg
+
+scenred2depsdir = dirname(@__FILE__)
+
+depsfile = joinpath(scenred2depsdir,"deps.jl")
 if isfile(depsfile)
     rm(depsfile)
 end
 
-tmpdir = "$(Pkg.Dir.path())/Scenred2/tmp" 
+tmpdir = scenred2depsdir*"/../tmp" 
 if ~isdir(tmpdir)
     mkdir(tmpdir) 
 end

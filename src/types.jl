@@ -1,30 +1,30 @@
 
-type Scenred2Node
+struct Scenred2Node
     predecessor::Int
     probability::Float64
     data::Vector{Float64}
 end
 
 
-type Scenred2Tree
+struct Scenred2Tree
     n_nodes::Int
     n_random_variables::Int
     nodes::Vector{Scenred2Node}
 end
 
-type Scenred2Scenario
+struct Scenred2Scenario
     probability::Float64
     data::Array{Float64,2}
 end
 
-type Scenred2Fan
+struct Scenred2Fan
     timesteps::Int #Number of time steps
     n_scen::Int #Number of scenarios
     n_random_variables::Int #Number of random variables
     scenarios::Vector{Scenred2Scenario}
 end
 
-type Scenred2Prms
+mutable struct Scenred2Prms
     #construction parameters
     construction_method::Int
     first_branch::Int

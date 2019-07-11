@@ -1,16 +1,15 @@
 function obj_to_dict!(d::Dict, obj; first_field::Int=1, last_field::Int=0)
-    for i in fieldnames(obj)[first_field:end-last_field]
+    for i in fieldnames(typeof(obj))[first_field:end-last_field]
        d[string(i)] = eval(quote $obj.$i end)
     end
-    filter!((k,v)->v>-1,d)
-    filter((k,v)->v>-1,d)
+    filter!(p-> last(p) >-1, d)
 end
 
 
 function stringify(scenario::Scenred2Scenario)
-    str = string(scenario.probability)"\n"
+    str = string(scenario.probability)*"\n"
     for t in 1:size(scenario.data)[1]
-        str = join([str,join(scenario.data[t,:], " ")"\n"])
+        str = join([str,join(scenario.data[t,:], " ")*"\n"])
     end
     str
 end
