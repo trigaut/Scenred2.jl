@@ -1,5 +1,3 @@
-using Pkg
-
 scenred2depsdir = dirname(@__FILE__)
 
 depsfile = joinpath(scenred2depsdir,"deps.jl")
